@@ -4,7 +4,7 @@ tic
 
 addpath C:\Users\dml36958\Desktop\DesktopDocs\MatlabFuncs %Any path where read80x80 function saved!
 
-Home_Path = 'G:\';
+Home_Path = 'F:\';
 cd(Home_Path)
 Home_Folder = cd;
 
