@@ -29,7 +29,10 @@ from tkinter.filedialog import askopenfilename
 from scipy.ndimage import measurements
 
 import numpy as np, matplotlib.pyplot as plt, os, docx
+import cProfile, pstats, io
 
+pr = cProfile.Profile()
+pr.enable()
 
 threshold = 80
 bins = np.arange(1,8000,1)
@@ -51,7 +54,7 @@ print(filePath)
 
 binaryFile = open(filePath)
 binaryFile.seek(0)
-nFrames = (os.stat(filePath).st_size/(80*80))/2
+nFrames = 1000#(os.stat(filePath).st_size/(80*80))/2
 for slice in np.arange(0,nFrames,1):
     frame=read80x80frame(binaryFile)
     frame[frame<threshold] = 0
@@ -108,104 +111,111 @@ for slice in np.arange(0,nFrames,1):
             continue            
         globalHistCSA[CSABins[z]] = globalHistCSA[CSABins[z]] + 1
     
-plt.figure()
-plt.plot(bins,globalHistRaw)    
-plt.plot(bins,globalHistCSD) 
-plt.plot(bins,globalHistCSA)       
-#%% Calibration on CSD
-energyPeaks = [59.54, 13.94, 17.75]
-searchLow = [1500, 300, 400]
-searchHigh = [2500, 400, 650]
+#plt.figure()
+#plt.plot(bins,globalHistRaw)    
+#plt.plot(bins,globalHistCSD) 
+#plt.plot(bins,globalHistCSA)    
 
-peakAmplitudes = np.zeros((edgePxX, edgePxY, len(energyPeaks)))
-peakCentroids = np.zeros((edgePxX, edgePxY, len(energyPeaks)))
-peakFWHM = np.zeros((edgePxX, edgePxY))
-
-m = np.zeros((edgePxX, edgePxY))
-c = np.zeros((edgePxX, edgePxY))
-
-searchLowLoc = np.zeros((len(searchLow)))
-searchHighLoc = np.zeros((len(searchHigh)))
-
-for energy in range(0, len(energyPeaks)):
-    searchLowLoc[energy] = np.where(bins==searchLow[energy])[0]
-    searchHighLoc[energy] = np.where(bins==searchHigh[energy])[0]
-
-searchLowLoc=searchLowLoc.astype(int)
-searchHighLoc=searchHighLoc.astype(int)
-
-x=0
-y=0
-for z in range(0, (edgePxX*edgePxY)-1):
-    for energy in range(0, len(energyPeaks)):
-        currentPixel = pixelHistCSD[x,y,searchLowLoc[energy]:searchHighLoc[energy]]
-        peakAmplitudes[x,y,energy] = np.max(currentPixel)
-        peakCentroids[x,y,energy] = np.where(currentPixel == peakAmplitudes[x,y,energy])[0][0] + searchLowLoc[energy]
-        if energy == 0:
-            FWHMLow = np.where(currentPixel>(peakAmplitudes[x,y,energy])/2)[0][0]
-            FWHMHigh = np.where(currentPixel>(peakAmplitudes[x,y,energy])/2)[0][-1]
-            peakFWHM[x,y] = FWHMHigh-FWHMLow
-    
-    fit = np.polyfit(peakCentroids[x,y,:],energyPeaks,1)
-    m[x,y] = fit[0]
-    c[x,y] = fit[1]
-    x=x+1
-    if x==edgePxX:
-        x=0
-        y=y+1
-    
-#%% Creating Figures
-#figurePath = os.getcwd() + '\Figures'
-#if os.path.exists(figurePath) == False:
-#    os.mkdir(figurePath)
+pr.disable()   
+s = io.StringIO()
+sortby = SortKey.CUMULATIVE
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print(s.getvalue())
+##%% Calibration on CSD
+#energyPeaks = [59.54, 13.94, 17.75]
+#searchLow = [1500, 300, 400]
+#searchHigh = [2500, 400, 650]
 #
-#os.chdir (figurePath)
-
-cmap=plt.get_cmap('jet') 
-plt.figure()
-plt.imshow(m, vmin=np.median(m)*0.5, vmax=np.median(m)*1.5, cmap=cmap)
-cbar = plt.colorbar()
-cbar.set_label('Gradient (keV/ADU)',fontsize=18)
-plt.xlabel('X (Pix)',fontsize=16)  
-plt.ylabel('Y (Pix)',fontsize=16)   
-#plt.savefig('gradients.png')
-plt.close()
-
-cmap=plt.get_cmap('jet') 
-plt.figure()
-plt.imshow(c, vmin=np.median(c)*0.5, vmax=np.median(c)*1.5, cmap=cmap)
-cbar = plt.colorbar()
-cbar.set_label('Intercept (keV)',fontsize=18)
-plt.xlabel('X (Pix)',fontsize=16)  
-plt.ylabel('Y (Pix)',fontsize=16)   
-#plt.savefig('intercepts.png')
-plt.close()
-
-cmap=plt.get_cmap('jet') 
-plt.figure()
-plt.imshow(peakFWHM, vmin=np.median(peakFWHM)*0.5, vmax=np.median(peakFWHM)*1.5, cmap=cmap)
-cbar = plt.colorbar()
-cbar.set_label('FWHM about 60keV Peak (keV)',fontsize=18)
-plt.xlabel('X (Pix)',fontsize=16)  
-plt.ylabel('Y (Pix)',fontsize=16)   
-#plt.savefig('FWHM.png')
-plt.close()
-
-
-
-
-       
-    
-    
-#%% Publishing Results
-
-SensorName = 'D212___Blah'
-doc = docx.Document()
-doc.add_heading('HEXITEC: Detector Test Results', 0)
-doc.add_heading(SensorName, 1)
-doc.save('test.docx')
-    
-#    hitsMask = np.zeros((edgePxX,edgePxY))
-#    hitsMask[frameLabelled>1] = 1
-#    Xhits, Yhits = np.where(hitsMask==1)
-    
+#peakAmplitudes = np.zeros((edgePxX, edgePxY, len(energyPeaks)))
+#peakCentroids = np.zeros((edgePxX, edgePxY, len(energyPeaks)))
+#peakFWHM = np.zeros((edgePxX, edgePxY))
+#
+#m = np.zeros((edgePxX, edgePxY))
+#c = np.zeros((edgePxX, edgePxY))
+#
+#searchLowLoc = np.zeros((len(searchLow)))
+#searchHighLoc = np.zeros((len(searchHigh)))
+#
+#for energy in range(0, len(energyPeaks)):
+#    searchLowLoc[energy] = np.where(bins==searchLow[energy])[0]
+#    searchHighLoc[energy] = np.where(bins==searchHigh[energy])[0]
+#
+#searchLowLoc=searchLowLoc.astype(int)
+#searchHighLoc=searchHighLoc.astype(int)
+#
+#x=0
+#y=0
+#for z in range(0, (edgePxX*edgePxY)-1):
+#    for energy in range(0, len(energyPeaks)):
+#        currentPixel = pixelHistCSD[x,y,searchLowLoc[energy]:searchHighLoc[energy]]
+#        peakAmplitudes[x,y,energy] = np.max(currentPixel)
+#        peakCentroids[x,y,energy] = np.where(currentPixel == peakAmplitudes[x,y,energy])[0][0] + searchLowLoc[energy]
+#        if energy == 0:
+#            FWHMLow = np.where(currentPixel>(peakAmplitudes[x,y,energy])/2)[0][0]
+#            FWHMHigh = np.where(currentPixel>(peakAmplitudes[x,y,energy])/2)[0][-1]
+#            peakFWHM[x,y] = FWHMHigh-FWHMLow
+#    
+#    fit = np.polyfit(peakCentroids[x,y,:],energyPeaks,1)
+#    m[x,y] = fit[0]
+#    c[x,y] = fit[1]
+#    x=x+1
+#    if x==edgePxX:
+#        x=0
+#        y=y+1
+#    
+##%% Creating Figures
+##figurePath = os.getcwd() + '\Figures'
+##if os.path.exists(figurePath) == False:
+##    os.mkdir(figurePath)
+##
+##os.chdir (figurePath)
+#
+#cmap=plt.get_cmap('jet') 
+#plt.figure()
+#plt.imshow(m, vmin=np.median(m)*0.5, vmax=np.median(m)*1.5, cmap=cmap)
+#cbar = plt.colorbar()
+#cbar.set_label('Gradient (keV/ADU)',fontsize=18)
+#plt.xlabel('X (Pix)',fontsize=16)  
+#plt.ylabel('Y (Pix)',fontsize=16)   
+##plt.savefig('gradients.png')
+#plt.close()
+#
+#cmap=plt.get_cmap('jet') 
+#plt.figure()
+#plt.imshow(c, vmin=np.median(c)*0.5, vmax=np.median(c)*1.5, cmap=cmap)
+#cbar = plt.colorbar()
+#cbar.set_label('Intercept (keV)',fontsize=18)
+#plt.xlabel('X (Pix)',fontsize=16)  
+#plt.ylabel('Y (Pix)',fontsize=16)   
+##plt.savefig('intercepts.png')
+#plt.close()
+#
+#cmap=plt.get_cmap('jet') 
+#plt.figure()
+#plt.imshow(peakFWHM, vmin=np.median(peakFWHM)*0.5, vmax=np.median(peakFWHM)*1.5, cmap=cmap)
+#cbar = plt.colorbar()
+#cbar.set_label('FWHM about 60keV Peak (keV)',fontsize=18)
+#plt.xlabel('X (Pix)',fontsize=16)  
+#plt.ylabel('Y (Pix)',fontsize=16)   
+##plt.savefig('FWHM.png')
+#plt.close()
+#
+#
+#
+#
+#       
+#    
+#    
+##%% Publishing Results
+#
+#SensorName = 'D212___Blah'
+#doc = docx.Document()
+#doc.add_heading('HEXITEC: Detector Test Results', 0)
+#doc.add_heading(SensorName, 1)
+#doc.save('test.docx')
+#    
+##    hitsMask = np.zeros((edgePxX,edgePxY))
+##    hitsMask[frameLabelled>1] = 1
+##    Xhits, Yhits = np.where(hitsMask==1)
+#    

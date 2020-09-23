@@ -490,4 +490,45 @@ save('saveglobalHistCSA.mat','globalHistCSA')
 save('saveglobalHist.mat','globalHist')
 save('saveEdges.mat','edges')
 save('saveCalibratedEdges','calibratedEdges')
-    
+   
+%%
+x=0;
+peakHalf = zeros(80,80);
+FWHM = zeros(80,80);
+peakAmplitudes = zeros(80,80);
+peakCentroids = zeros(80,80);
+StepsX = 80;
+y=1;
+for z = 1:(StepsX*StepsX)
+    x=x+1;
+
+    currentSubPix = squeeze(pixelHistCSD(250:800,x,y));
+          
+    peakAmplitudes(x,y)=max(currentSubPix);
+    peakCentroids(x,y)=find(currentSubPix==peakAmplitudes(x,y),1,'first');
+    peakHalf(x,y) =  peakAmplitudes(x,y)/2;
+    FWHMHigh = peakCentroids(x,y) + (find(currentSubPix(peakCentroids(x,y):length(currentSubPix))< peakHalf(x,y),1,'first'));
+    FWHMLow = find(currentSubPix>peakHalf(x,y), 1, 'first');
+    if isempty(FWHMHigh)==1
+        continue
+    end
+    FWHM(x,y) = FWHMHigh-FWHMLow;    
+ 
+    if x==StepsX
+        x=0;
+        y=y+1;
+    end
+end
+
+figure
+imagesc((FWHM./peakAmplitudes)*100)
+colorMap = jet(256); 
+colormap(colorMap) 
+set(gca,'FontSize',18,'fontname','times') 
+caxis([0 200])
+d = colorbar; 
+d.Label.String = 'FWHM (%)'; 
+d.Label.FontSize = 18; 
+xlabel('X (Pix)','FontSize', 18) 
+ylabel('Y (Pix)','FontSize', 18) 
+axis square 

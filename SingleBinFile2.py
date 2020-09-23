@@ -29,7 +29,10 @@ from tkinter.filedialog import askopenfilename
 from scipy.ndimage import measurements
 
 import numpy as np, matplotlib.pyplot as plt, os, docx
+import cProfile, pstats, io
 
+pr = cProfile.Profile()
+pr.enable()
 
 threshold = 80
 bins = np.arange(1,8000,1)
@@ -68,50 +71,58 @@ for slice in np.arange(0,nFrames,1):
             maxHit = np.where(frame[Xhits,Yhits]==max(frame[Xhits,Yhits]))
             FrameCSA[Xhits[maxHit[0][0]],Yhits[maxHit[0][0]]] = totalHit
     
-    RawBins = np.digitize(frame, bins)
-    [x,y] = np.where(RawBins>0)
+    [x,y] = np.where(frame>0)
     for z in range(0, len(x)):
-        if RawBins[x[z],y[z]]>7998:
+        CurrentRawVal = int(frame[x[z],y[z]])
+        if CurrentRawVal>7999:
             continue
-        pixelHistRaw[x[z],y[z],RawBins[x[z],y[z]]] = pixelHistRaw[x[z],y[z],RawBins[x[z],y[z]]] + 1
+        pixelHistRaw[x[z],y[z],CurrentRawVal] = pixelHistRaw[x[z],y[z],CurrentRawVal] + 1
         
-    CSDBins = np.digitize(FrameCSD, bins)
-    [x,y] = np.where(CSDBins>0)
+    [x,y] = np.where(FrameCSD>0)
     for z in range(0, len(x)):
-        if CSDBins[x[z],y[z]]>7998:
+        CurrentRawVal = int(FrameCSD[x[z],y[z]])
+        if CurrentRawVal>7999:
             continue
-        pixelHistCSD[x[z],y[z],CSDBins[x[z],y[z]]] = pixelHistCSD[x[z],y[z],CSDBins[x[z],y[z]]] + 1
+        pixelHistCSD[x[z],y[z],CurrentRawVal] = pixelHistCSD[x[z],y[z],CurrentRawVal] + 1
         
-    CSABins = np.digitize(FrameCSA, bins)
-    [x,y] = np.where(CSABins>0)
+    [x,y] = np.where(FrameCSA>0)
     for z in range(0, len(x)):
-        if CSABins[x[z],y[z]]>7998:
-            continue        
-        pixelHistCSA[x[z],y[z],CSABins[x[z],y[z]]] = pixelHistCSA[x[z],y[z],CSABins[x[z],y[z]]] + 1
+        CurrentRawVal = int(FrameCSA[x[z],y[z]])
+        if CurrentRawVal>7999:
+            continue
+        pixelHistCSA[x[z],y[z],CurrentRawVal] = pixelHistCSA[x[z],y[z],CurrentRawVal] + 1
         
         
-    RawBins = RawBins[RawBins>0]
+    RawBins = frame[frame>0]
     for z in range(0, len(RawBins)):
         if RawBins[z]>7998:
             continue        
-        globalHistRaw[RawBins[z]] = globalHistRaw[RawBins[z]] + 1
+        globalHistRaw[int(RawBins[z])] = globalHistRaw[int(RawBins[z])] + 1
         
-    CSDBins = CSDBins[CSDBins>0]
+    CSDBins = FrameCSD[FrameCSD>0]
     for z in range(0, len(CSDBins)):
         if CSDBins[z]>7998:
             continue               
-        globalHistCSD[CSDBins[z]] = globalHistCSD[CSDBins[z]] + 1
+        globalHistCSD[int(CSDBins[z])] = globalHistCSD[int(CSDBins[z])] + 1
         
-    CSABins = CSABins[CSABins>0]
+    CSABins = FrameCSA[FrameCSA>0]
     for z in range(0, len(CSABins)):
         if CSABins[z]>7998:
             continue            
-        globalHistCSA[CSABins[z]] = globalHistCSA[CSABins[z]] + 1
+        globalHistCSA[int(CSABins[z])] = globalHistCSA[int(CSABins[z])] + 1
     
 plt.figure()
 plt.plot(bins,globalHistRaw)    
 plt.plot(bins,globalHistCSD) 
-plt.plot(bins,globalHistCSA)       
+plt.plot(bins,globalHistCSA)    
+
+pr.disable()   
+ss = io.StringIO()
+sortby = pstats.SortKey.CUMULATIVE
+ps = pstats.Stats(pr, stream=ss).sort_stats(sortby)
+ps.print_stats()
+print(ss.getvalue())[:,1]
+
 #%% Calibration on CSD
 energyPeaks = [59.54, 13.94, 17.75]
 searchLow = [1500, 300, 400]
