@@ -27,8 +27,8 @@ flag = 1;
 frame =zeros(80,80);
 
 binMin=1;
-binMax=4000;
-binWidth=5;
+binMax=8000;
+binWidth=10;
 edges=binMin:binWidth:binMax;
 globalHist=zeros(length(edges),1);
 globalHistCSD=zeros(length(edges),1);
@@ -299,7 +299,7 @@ d.Label.FontSize = 18;
 xlabel('X (Pix)','FontSize', 18) 
 ylabel('Y (Pix)','FontSize', 18) 
 axis square 
-saveas(fig,'Gradients.fig')
+% saveas(fig,'Gradients.fig')
 
 fig = figure (2) ;
 imagesc(c) 
@@ -313,7 +313,7 @@ d.Label.FontSize = 18;
 xlabel('X (Pix)','FontSize', 18) 
 ylabel('Y (Pix)','FontSize', 18) 
 axis square 
-saveas(fig,'Intercepts.fig')
+% saveas(fig,'Intercepts.fig')
 
 fig = figure (3) ;
 imagesc(noiseMatrix) 
@@ -327,7 +327,7 @@ d.Label.FontSize = 18;
 xlabel('X (Pix)','FontSize', 18) 
 ylabel('Y (Pix)','FontSize', 18) 
 axis square 
-saveas(fig,'Noise.fig')
+% saveas(fig,'Noise.fig')
 
 fig = figure (4);
 imagesc(image60keV) 
@@ -341,7 +341,7 @@ d.Label.FontSize = 18;
 xlabel('X (Pix)','FontSize', 18) 
 ylabel('Y (Pix)','FontSize', 18) 
 axis square 
-saveas(fig,'Image60keV.fig')
+% saveas(fig,'Image60keV.fig')
 %% Histogrammed Data
 
 [n,edges]=histcounts(m,50);
@@ -357,7 +357,7 @@ yyaxis right
 b=plot(edges(1:length(edges)-1),cumHist)
 ylabel('Cumulative Pixels as Percent','FontSize', 16) 
 b.LineWidth=3
-saveas(fig,'GradientHistogram.fig')
+% saveas(fig,'GradientHistogram.fig')
 
 [n,edges]=histcounts(c,50);
 cumHist=cumsum(n);
@@ -372,7 +372,7 @@ yyaxis right
 b=plot(edges(1:length(edges)-1),cumHist)
 ylabel('Cumulative Pixels as Percent','FontSize', 16) 
 b.LineWidth=3
-saveas(fig,'InterceptsHistogram.fig')
+% saveas(fig,'InterceptsHistogram.fig')
 
 [n,edges]=histcounts(noiseMatrix,50);
 cumHist=cumsum(n);
@@ -387,7 +387,7 @@ yyaxis right
 b=plot(edges(1:length(edges)-1),cumHist)
 ylabel('Cumulative Pixels as Percent','FontSize', 16) 
 b.LineWidth=3
-saveas(fig, 'ThresholdsHistogram.fig')
+% saveas(fig, 'ThresholdsHistogram.fig')
 
 %% Calibrated plots
 
@@ -412,7 +412,7 @@ xlabel('Energy (keV)','FontSize', 18)
 ylabel('Counts)','FontSize', 18)
 title('Single Pixel Spectra - CSD')
 box off
-saveas(fig,'CalibratedCSDplotPixel4040.fig')
+% saveas(fig,'CalibratedCSDplotPixel4040.fig')
 
 %global calibration
 globalEdges = squeeze(mean(mean(calibratedEdges,2),3));
@@ -423,7 +423,7 @@ xlabel('Energy (keV)','FontSize', 18)
 ylabel('Counts)','FontSize', 18)
 title('Global Spectra - CSD')
 box off
-saveas(fig,'CalibratedGlobalCSDplot.fig')
+% saveas(fig,'CalibratedGlobalCSDplot.fig')
 %% Peaks analysis
 peakCounts = zeros(80,80);
 peakAmp = zeros(80,80);
@@ -464,7 +464,7 @@ end
 
 fig = figure (10);
 imagesc(peakCentkeV)
-saveas(fig,'PeakCentroidsImage.fig');
+% saveas(fig,'PeakCentroidsImage.fig');
 
 mainPeakCents = squeeze(peakCentroids(:,:,1));
 fig = figure(11);
@@ -479,17 +479,17 @@ d.Label.FontSize = 18;
 xlabel('X (Pix)','FontSize', 18) 
 ylabel('Y (Pix)','FontSize', 18) 
 axis square 
-saveas(fig,'peakCents_60keV')
+% saveas(fig,'peakCents_60keV')
 
 %saving of useful matrices
-save('savepixelHistCSD.mat','pixelHistCSD')
-save('savepixelHistCSA.mat','pixelHistCSA')
-save('savepixelHist.mat','pixelHist')
-save('saveglobalHistCSD.mat','globalHistCSD')
-save('saveglobalHistCSA.mat','globalHistCSA')
-save('saveglobalHist.mat','globalHist')
-save('saveEdges.mat','edges')
-save('saveCalibratedEdges','calibratedEdges')
+% save('savepixelHistCSD.mat','pixelHistCSD')
+% save('savepixelHistCSA.mat','pixelHistCSA')
+% save('savepixelHist.mat','pixelHist')
+% save('saveglobalHistCSD.mat','globalHistCSD')
+% save('saveglobalHistCSA.mat','globalHistCSA')
+% save('saveglobalHist.mat','globalHist')
+% save('saveEdges.mat','edges')
+% save('saveCalibratedEdges','calibratedEdges')
    
 %%
 x=0;
