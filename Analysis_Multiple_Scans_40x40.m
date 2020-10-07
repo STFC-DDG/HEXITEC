@@ -12,15 +12,12 @@ cd (fileString)
 filesList = dir('D*');
 filesList = filesList(1);
 
+% =40 for 40x40 sensor
 sqEdge = 40;
 
 noiseThreshold = 80;
-%%
 
-addpath 'H:\Documents\Hexitec\Matlab'
-
-% [fileName,pathName] = uigetfile('*.bin','Select the HEXITEC BIN files for analysis');
-
+%% Begin analysing and looping through sensors
 
 for sensorNum=1:length(filesList)
     cd (fileString)
@@ -35,8 +32,10 @@ for sensorNum=1:length(filesList)
     sensorPath = strcat(pathName,'\',sensorName);
     cd (sensorPath)
 
-    file750V = dir('Am241*750V*.bin');
-    
+    %default analysis at 750V if for whatever reason no 750 availible
+    %searches for 600V, then 500V. These bias V values can be manually changed below to suit
+    %the scan conditions
+    file750V = dir('Am241*750V*.bin');    
     if isempty(file750V)==1
         file600V = dir('Am241*600V*.bin');
         file750V = file600V;
@@ -46,6 +45,8 @@ for sensorNum=1:length(filesList)
         end
     end
 
+    % if there are multiple scan files at 750V, this block checks to find
+    % the largest (i.e. 'full') file to take forward for analysis.
     fileSizes = zeros(length(file750V),1);
     if length(file750V)>1
         for z=1:length(file750V)
@@ -60,18 +61,18 @@ for sensorNum=1:length(filesList)
     currentFile = file750V(fullFile);
     filePath = strcat(currentFile.folder,'\',currentFile.name);
     
+    %prints the current file to screen
     currentFile
     %%
+    %opens file and sets binary location to start (rewinds it)
     fid=fopen(filePath);
-
     fseek(fid,0,'eof');
     nFrames = floor(ftell(fid)/(80*80));
     frewind(fid);
     flag = 1;
 
     %variables to be used
-    frame =zeros(40,40);
-    
+    frame =zeros(40,40);    
     binMin=1;
     binMax=4000;
     binWidth=5;
@@ -86,6 +87,9 @@ for sensorNum=1:length(filesList)
     noiseMultiplier=8;
     noiseMatrix=zeros(sqEdge,sqEdge);
 
+    %first run through for noise analysis doesn't look at all frames yet -
+    %NB. as of Oct 2020 this block generally doesn't do a lot at the moment but code still
+    %works with it 
     for fNum = 1:10000%(nFrames/2)-1
         frame = read80x80Frame(fid,flag);
         frame40 = zeros(40,40);
@@ -141,7 +145,8 @@ for sensorNum=1:length(filesList)
         end
     end
 
-    %% This is the analysis section following thresholding with CSD and CSA - Rhian's Method!!
+    %% This is the analysis section following thresholding with CSD and CSA - Rhian's Method!! 
+    %this section runs through all the frames
     tic
     fid=fopen(filePath);
 
@@ -195,6 +200,8 @@ for sensorNum=1:length(filesList)
 
         %CSD and CSA
         %double pass of clusters identification to stop over counting in CSA
+        %NB. Oct 2020 double pass is not necessary -  just haven't edited this out
+        %yet
         clusterMaskAll = frame>noiseThreshold;%noiseMatrix;
         clusterMaskLow = immultiply((frame>noiseMatrix),(frame<1000));
         clusterMaskHigh = (frame>1000);
@@ -205,6 +212,9 @@ for sensorNum=1:length(filesList)
         frameCSD = frameThresh;
         frameCSA = frameThresh;
 
+        %clusters image labels each cluster so can loop through all
+        %clusters and do CSD/CSA on each cluster, rather than looping
+        %through every pixel.
         clustersImage = bwlabel(clusterMask);
         numClusters = max(max(clustersImage));
         for currentCluster=1:numClusters
@@ -286,15 +296,19 @@ for sensorNum=1:length(filesList)
 
     limit=800;
 
-%     figure
-%     plot(edges,globalHistCSD(1:limit))
-%     hold on
-%     plot(edges,globalHistCSA(1:limit))
+    %plots histograms to screen so can visually assign boundaries for
+    %calibration limits in next step. This is done as CZT/CdTe/GaAs have
+    %different realtive peak positions to each other. ** shows where edit
+    %happens
+    figure
+    plot(edges,globalHistCSD(1:limit))
+    hold on
+    plot(edges,globalHistCSA(1:limit))
 
-% disp('LOOK AT YOUR HISTOGRAMS - ready for the calibration step next!!')
-% pause
+ disp('LOOK AT YOUR HISTOGRAMS - ready for the calibration step next!!')
+ pause
 
-    %% Calibration
+    %% Calibration -  can run just this section if had to exit run above to change calibration boundaries.
     %Calibration on CSD
 
     FitSpec = pixelHistCSD;
@@ -304,6 +318,7 @@ for sensorNum=1:length(filesList)
     c = zeros(sqEdge,sqEdge);
     image60keV = zeros(sqEdge,sqEdge);
 
+    %% ** edit thresholds?
     AmLow = 1500; %ADU!
     AmHigh = 2500; %ADU!
 
@@ -312,11 +327,13 @@ for sensorNum=1:length(filesList)
     nInterp = binWidth;
 
     energyPeaks = [59.54 13.94 17.75];
+    %% ** edit thresholds?
     searchLow = [1500 350 460];
     searchHigh = [2000 459 600];
-
     y=1;
     x=0;
+    
+    %this block calibrates
     for z = 1:(sqEdge*sqEdge)
         x=x+1;
 
