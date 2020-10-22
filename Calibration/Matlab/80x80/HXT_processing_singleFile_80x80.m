@@ -505,7 +505,7 @@ for z = 1:(StepsX*StepsX)
     currentSubPix = squeeze(pixelHistCSD(250:800,x,y));
           
     peakAmplitudes(x,y)=max(currentSubPix);
-    peakCentroids(x,y)=find(currentSubPix==peakAmplitudes(x,y),1,'first');
+    peakCentroids(x,y)=find(currentSubPix==peakAmplitudes(x,y),1,'first');    
     peakHalf(x,y) =  peakAmplitudes(x,y)/2;
     FWHMHigh = peakCentroids(x,y) + (find(currentSubPix(peakCentroids(x,y):length(currentSubPix))< peakHalf(x,y),1,'first'));
     FWHMLow = find(currentSubPix>peakHalf(x,y), 1, 'first');
@@ -514,18 +514,19 @@ for z = 1:(StepsX*StepsX)
     end
     FWHM(x,y) = FWHMHigh-FWHMLow;    
  
+    peakCentroids(x,y) = peakCentroids(x,y)+250;
     if x==StepsX
         x=0;
         y=y+1;
-    end
+    end    
 end
 
 figure
-imagesc((FWHM./peakAmplitudes)*100)
+imagesc((FWHM./peakCentroids)*100)
 colorMap = jet(256); 
 colormap(colorMap) 
 set(gca,'FontSize',18,'fontname','times') 
-caxis([0 200])
+caxis([0 40])
 d = colorbar; 
 d.Label.String = 'FWHM (%)'; 
 d.Label.FontSize = 18; 
