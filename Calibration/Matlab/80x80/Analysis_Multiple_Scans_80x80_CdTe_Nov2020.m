@@ -7,18 +7,17 @@ clear all
 close all
 
 %% Accessing files to analyse
-fileString = 'D:\Illinois\'
+fileString = 'J:\Rhian\'
 cd (fileString)
-filesList = dir('D*');
-filesList = filesList(5:8);
+filesList = dir('1606*'); %Detector stub val goes here
+% filesList = filesList(5:8);
 
-%Change depending on detetcor properties
+%Change depending on detector properties
 noiseThreshold = 80;
-addpath 'H:\Documents\Hexitec\Matlab'
 
 %%
 %loops through the directories containing each bin file for detector
-for sensorNum=1:length(filesList)
+for sensorNum=2:length(filesList)
     cd (fileString)
     close all
     clearvars -except filesList sensorNum noiseThreshold fileString
@@ -29,17 +28,21 @@ for sensorNum=1:length(filesList)
     pathName = filesList(sensorNum).folder;
 
     sensorPath = strcat(pathName,'\',sensorName);
+    
+    sensorPath = strcat(sensorPath,'\','500V');
+    
     cd (sensorPath)
     
     %DEFAULTS TO SEARCHING FOR 750v FILE, IF UNAVAILABLE SEARCHES FOR 600V,
     %IF THAT'S NOT AVAILIBLE SEARCHES FOR 500V
-    file750V = dir('Am241*750V*.bin');
+    file750V = dir('*750V*.bin');
+    file750V = dir('*test*.bin');
     
     if isempty(file750V)==1
-        file600V = dir('Am241*600V*.bin');
+        file600V = dir('*600V*.bin');
         file750V = file600V;
         if isempty(file600V)==1
-            file500V = dir('Am241*500V*.bin');
+            file500V = dir('*500V*.bin');
             file750V = file500V;
         end
     end
@@ -97,7 +100,7 @@ for sensorNum=1:length(filesList)
         %puts bins in individual pixel histograms
         [x,y]=find(binnedFrame>0);
         for z=1:length(x)
-            pixelHist(binnedFrame(x(z),y(z)),x(z),y(z))=pixelHist(binnedFrame(x(z),y(z)),x(z),y(z))+1;
+            pixelHist(binnedFrame(x(z),y(z)))=pixelHist(binnedFrame(x(z),y(z)),x(z),y(z))+1;
             if binnedFrame(x(z),y(z))>0 && binnedFrame(x(z),y(z))<100
                 noiseHist(binnedFrame(x(z),y(z)),x(z),y(z))=noiseHist(binnedFrame(x(z),y(z)),x(z),y(z))+1;
             end
@@ -268,6 +271,7 @@ for sensorNum=1:length(filesList)
     limit=800;
 
     figure
+    globalEdges = edges;
     plot(globalEdges,globalHistCSD)
 
 disp('if this is first run through EXIT CODE NOW and use command: plot(globalEdges,globalHistCSD) to identify upper and lower energy peak limits for calibration')
@@ -291,8 +295,8 @@ pause
     nInterp = binWidth;
 
     energyPeaks = [59.54 13.94 17.75];
-    searchLow = [1500 350 460];
-    searchHigh = [2000 459 600];
+    searchLow = [1500 350 500];
+    searchHigh = [2000 499 650];
 
     y=1;
     x=0;
@@ -552,6 +556,7 @@ pause
     x=0;
     peakHalf = zeros(80,80);
     FWHM = zeros(80,80);
+    FWHMKeV = zeros(80,80);
     peakAmplitudes = zeros(80,80);
     peakCentroids = zeros(80,80);
     StepsX = 80;
@@ -569,7 +574,8 @@ pause
         if isempty(FWHMHigh)==1
             continue
         end
-        FWHM(x,y) = FWHMHigh-FWHMLow;    
+        FWHMKeV(x,y) = calibratedEdges(250+FWHMHigh)-calibratedEdges(250+FWHMLow);    
+        FWHM(x,y) = FWHMHigh-FWHMLow; 
 
         peakCentroids(x,y) = peakCentroids(x,y)+250;
         if x==StepsX
@@ -583,14 +589,14 @@ pause
     colorMap = jet(256); 
     colormap(colorMap) 
     set(gca,'FontSize',18,'fontname','times') 
-    caxis([0 40])
+    caxis([0 3])
     d = colorbar; 
     d.Label.String = 'FWHM (%)'; 
     d.Label.FontSize = 18; 
     xlabel('X (Pix)','FontSize', 18) 
     ylabel('Y (Pix)','FontSize', 18) 
     axis square 
-    saveas(fig,'FWHMPercent')
+%     saveas(fig,'FWHMPercent')
     
     save('saveFWHMkeV','FWHM')
     FWHMPercent = ((FWHM./peakCentroids)*100);
