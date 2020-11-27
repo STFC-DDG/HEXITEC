@@ -7,7 +7,7 @@ clear all
 close all
 
 %% Accessing files to analyse
-fileString = 'J:\Rhian\'
+fileString = 'J:\NewCdTe'
 cd (fileString)
 filesList = dir('1606*'); %Detector stub val goes here
 % filesList = filesList(5:8);
@@ -17,7 +17,7 @@ noiseThreshold = 80;
 
 %%
 %loops through the directories containing each bin file for detector
-for sensorNum=2:length(filesList)
+for sensorNum=1:length(filesList)
     cd (fileString)
     close all
     clearvars -except filesList sensorNum noiseThreshold fileString
@@ -29,14 +29,13 @@ for sensorNum=2:length(filesList)
 
     sensorPath = strcat(pathName,'\',sensorName);
     
-    sensorPath = strcat(sensorPath,'\','500V');
+%     sensorPath = strcat(sensorPath,'\','500V');
     
     cd (sensorPath)
     
     %DEFAULTS TO SEARCHING FOR 750v FILE, IF UNAVAILABLE SEARCHES FOR 600V,
     %IF THAT'S NOT AVAILIBLE SEARCHES FOR 500V
-    file750V = dir('*750V*.bin');
-    file750V = dir('*test*.bin');
+    file750V = dir('*400V*.bin');
     
     if isempty(file750V)==1
         file600V = dir('*600V*.bin');
@@ -275,7 +274,7 @@ for sensorNum=2:length(filesList)
     plot(globalEdges,globalHistCSD)
 
 disp('if this is first run through EXIT CODE NOW and use command: plot(globalEdges,globalHistCSD) to identify upper and lower energy peak limits for calibration')
-pause
+% pause
 
     %% Calibration
     %Calibration on CSD
@@ -343,7 +342,7 @@ pause
     end
 
     %% Data Viulisation
-    figureFile = strcat('Figures_', sensorName);
+    figureFile = strcat('Figures_400V_', sensorName);
     
     %makes a directory to save all the figures in
     mkdir(figureFile)
