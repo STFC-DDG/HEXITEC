@@ -210,7 +210,7 @@ Max_Amp_Pos = zeros(80,80,2);
 % the search window for the Am-241 primary photo peak.
 
 Ninterp = 10;
-Am_low = 1600; %in ADUs not bins!
+Am_low = 1500; %in ADUs not bins!
 Am_high = 2500; %in ADUs not bins!
 
 
