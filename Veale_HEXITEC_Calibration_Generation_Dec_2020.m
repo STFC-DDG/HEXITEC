@@ -19,7 +19,7 @@ end
 
 %Set the noise multiplier for threshold calculation
 
-noise_multiplier = 6; %4 for CdTe @ 500V
+noise_multiplier = 6.5; %4 for CdTe @ 500V
 Hit_Pixel_Threshold = 200;
 highThresh = 8000;
 binWidth = 10;
