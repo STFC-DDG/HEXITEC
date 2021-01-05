@@ -289,12 +289,15 @@ xlabel('X (Pix)','FontSize', 22,'FontWeight','bold')
 ylabel('Y (Pix)','FontSize', 22,'FontWeight','bold')
 axis square
 
+imAlpha=ones(size(CS_Dist));
+imAlpha(CS_Dist==0)=0;
+
 figure (4)
-imagesc(log10(CS_Dist(1:500,:)))
+imagesc(log10(CS_Dist(200:280,:)),'AlphaData',imAlpha(200:280,:))
 colorMap = jet(256);
 colormap(colorMap)
 set(gca,'FontSize',18,'FontWeight','bold','fontname','times','YDir','normal')
-caxis([0 3])
+caxis([0 4])
 d = colorbar;
 d.Label.String = 'Counts';
 d.Label.FontSize = 22;
@@ -302,9 +305,9 @@ xlabel('(E_{1}-E_{2})/E_{T}','FontSize', 22,'FontWeight','bold')
 ylabel('E_{T} (keV)','FontSize', 22,'FontWeight','bold')
 xticks([1 500 1000 1500 2000])
 xticklabels([-1.0 -0.5 0 0.5 1.0])
-yticks([1 100 200 300 400 500])
-yticklabels([0 25 50 75 100 125])
-axis square
+yticks([1 20 40 60 80])
+yticklabels([50 55 60 65 70])
+%axis square
 
 figure (5)
 imagesc(log(CS_Dist_Multi(1:300,1:300,1)))

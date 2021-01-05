@@ -19,7 +19,7 @@ end
 
 %Set the noise multiplier for threshold calculation
 
-noise_multiplier = 6.5; %4 for CdTe @ 500V
+noise_multiplier = 4; %4 for CdTe @ 500V
 Hit_Pixel_Threshold = 200;
 highThresh = 8000;
 binWidth = 10;
@@ -238,15 +238,10 @@ for x = 1:80
     end
 end
 
-% Having calculated the Am-241 peak position it's possible to make a first
-% rough estimate of the calibration of each pixel. This is then used to
+% Having calculated the two most promiment peak positions a first rough
+% estimate of the calibration of each pixel is made. This is then used to
 % guess the position of the three other peaks and then searches for the
 % actual position in a window around the guess.
-
-% Am_Cent = squeeze(Peak_Cent(:,:,1));
-% m_rough = E_Peak(1,1)./Am_Cent;
-% Peak_Window_Low(:,1) = [100 25 25 25]; %in ADUs not bins!
-% Peak_Window_High(:,1) = [100 25 25 25]; %in ADUs not bins!
 
 E_Peak(:,1) = [59.54 13.94 17.75 26.34];
 E_window = 1; %keV
